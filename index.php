@@ -590,14 +590,14 @@ if (!is_null($chosen['type']) && in_array($chosen['type'],$site_types)) {
         } else {
             $blah=preg_match('/_[\d]{10}_([\d]{10})[^\/]*$/',$filename,$matches);
             if (count($matches)>0) {
-                $mn='00'
+                $mn='00';
             } else {
                 $blah=preg_match('/([\d]{12})[^\/]*$/',$filename,$matches);
                 if (count($matches)>0) {
                     $mn=substr($matches[1],10,2);
                 } else {
                     $blah=preg_match('/([\d]{10})[^\/]*$/',$filename,$matches);
-                    $mn='00'
+                    $mn='00';
                 }
             }
         }
