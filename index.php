@@ -75,6 +75,12 @@ if (isset($_REQUEST['date'])) {
         $month=substr($date,4,2);
         $day=substr($date,6,2);
         $hour=substr($date,8,2);
+        if ($hour=='25') {
+            $hour=NULL;
+        }
+        if ($day=='00') {
+            $day=NULL;
+        }
     } else {
         $error="Forecast date in address bar in wrong format (YYYYMMDDHH)";
     }
@@ -243,72 +249,145 @@ if ($comb_ym) {
 } else {
     $ymdir="$year/$month";
 }
-if (isset($allhour)) {
+
+if (isset($allyear)||isset($allym)) {
+    $oldhour=$hour;
+    if (is_null($hour)) { $hour='25'; }
+    $oldday=$day;
+    if (is_null($day)) { $day='00'; }
     $url_args["date"]="date=$year$month$day$hour";
 
-    if (array_key_exists($hour_key-1,$allhour)) {
+    $newhour=$hour;
+    $newday=$day;
+    if (!is_null($oldhour) && array_key_exists($hour_key-1,$allhour)) {
         $prevdate=$year.$month.$day.$allhour[$hour_key-1];
-    } elseif (array_key_exists($day_key-1,$allday)) {
-        for ($i = 1; $i <= $day_key; $i++) {
-            $newhour=array_pop(array_map("basename",glob("$up_to_year/$ymdir/".$allday[$day_key-$i]."/??")));
-            if (!is_null($newhour)) { break; }
+    } elseif (!is_null($oldday) && array_key_exists($day_key-1,$allday)) {
+        $i=1;
+        if (!is_null($oldhour)) {
+            for ($i = 1; $i <= $day_key; $i++) {
+                $newhour=array_pop(array_map("basename",glob("$up_to_year/$ymdir/".$allday[$day_key-$i]."/??")));
+                if (!is_null($newhour)) { break; }
+            }
         }
         $prevdate=$year.$month.$allday[$day_key-$i].$newhour;
     } elseif (!$comb_ym && array_key_exists($month_key-1,$allmonth)) {
-        for ($i = 1; $i <= $month_key; $i++) {
-            $newhour=array_pop(array_map("basename",glob("$up_to_year/$year/".$allmonth[$month_key-$i]."/??/??")));
-            if (!is_null($newhour)) { break; }
+        $i=1;
+        if (!is_null($oldhour)) {
+            for ($i = 1; $i <= $month_key; $i++) {
+                $newhour=array_pop(array_map("basename",glob("$up_to_year/$year/".$allmonth[$month_key-$i]."/??/??")));
+                if (!is_null($newhour)) { break; }
+            }
+            $newday=array_pop(array_map("basename",glob("$up_to_year/$year/".$allmonth[$month_key-$i]."/??")));
+        } elseif (!is_null($oldday)) {
+            for ($i = 1; $i <= $month_key; $i++) {
+                $newday=array_pop(array_map("basename",glob("$up_to_year/$year/".$allmonth[$month_key-$i]."/??")));
+                if (!is_null($newday)) { break; }
+            }
         }
-        $newday=array_pop(array_map("basename",glob("$up_to_year/$year/".$allmonth[$month_key-$i]."/??")));
         $prevdate=$year.$allmonth[$month_key-$i].$newday.$newhour;
     } elseif (!$comb_ym && array_key_exists($year_key-1,$allyear)) {
-        for ($i = 1; $i <= $year_key; $i++) {
-            $newhour=array_pop(array_map("basename",glob("$up_to_year/".$allyear[$year_key-$i]."/??/??/??")));
-            if (!is_null($newhour)) { break; }
+        if (!is_null($oldhour)) {
+            for ($i = 1; $i <= $year_key; $i++) {
+                $newhour=array_pop(array_map("basename",glob("$up_to_year/".$allyear[$year_key-$i]."/??/??/??")));
+                if (!is_null($newhour)) { break; }
+            }
+            $newday=array_pop(array_map("basename",glob("$up_to_year/".$allyear[$year_key-$i]."/??/??")));
+            $newmon=array_pop(array_map("basename",glob("$up_to_year/".$allyear[$year_key-$i]."/??")));
+        } elseif (!is_null($oldday)) {
+            for ($i = 1; $i <= $year_key; $i++) {
+                $newday=array_pop(array_map("basename",glob("$up_to_year/".$allyear[$year_key-$i]."/??/??")));
+                if (!is_null($newday)) { break; }
+            }
+            $newmon=array_pop(array_map("basename",glob("$up_to_year/".$allyear[$year_key-$i]."/??")));
+        } else {
+            for ($i = 1; $i <= $year_key; $i++) {
+                $newmon=array_pop(array_map("basename",glob("$up_to_year/".$allyear[$year_key-$i]."/??")));
+                if (!is_null($newmon)) { break; }
+            }
         }
-        $newday=array_pop(array_map("basename",glob("$up_to_year/".$allyear[$year_key-$i]."/??/??")));
-        $newmon=array_pop(array_map("basename",glob("$up_to_year/".$allyear[$year_key-$i]."/??")));
         $prevdate=$allyear[$year_key-$i].$newmon.$newday.$newhour;
     } elseif ($comb_ym && array_key_exists($ym_key-1,$allym)) {
-        for ($i = 1; $i <= $ym_key; $i++) {
-            $newhour=array_pop(array_map("basename",glob("$up_to_year/".$allym[$ym_key-$i]."/??/??")));
-            if (!is_null($newhour)) { break; }
+        $i=1;
+        if (!is_null($oldhour)) {
+            for ($i = 1; $i <= $ym_key; $i++) {
+                $newhour=array_pop(array_map("basename",glob("$up_to_year/".$allym[$ym_key-$i]."/??/??")));
+                if (!is_null($newhour)) { break; }
+            }
+            $newday=array_pop(array_map("basename",glob("$up_to_year/".$allym[$ym_key-$i]."/??")));
+        } elseif (!is_null($oldday)) {
+            for ($i = 1; $i <= $ym_key; $i++) {
+                $newday=array_pop(array_map("basename",glob("$up_to_year/".$allym[$ym_key-$i]."/??")));
+                if (!is_null($newday)) { break; }
+            }
         }
-        $newday=array_pop(array_map("basename",glob("$up_to_year/".$allym[$ym_key-$i]."/??")));
         $prevdate=$allym[$ym_key-$i].$newday.$newhour;
     } else {
         $prevdate=NULL;
     }
 
-    if (array_key_exists($hour_key+1,$allhour)) {
+    $newhour=$hour;
+    $newday=$day;
+    if (!is_null($oldhour) && array_key_exists($hour_key+1,$allhour)) {
         $nextdate=$yearmon.$day.$allhour[$hour_key+1];
-    } elseif (array_key_exists($day_key+1,$allday)) {
-        for ($i = 1; $i < count($allday)-$day_key; $i++) {
-            $newhour=array_shift(array_map("basename",glob("$up_to_year/$yearmon/".$allday[$day_key+$i]."/??")));
-            if (!is_null($newhour)) { break; }
+    } elseif (!is_null($oldday) && array_key_exists($day_key+1,$allday)) {
+        $i=1;
+        if (!is_null($oldhour)) {
+            for ($i = 1; $i < count($allday)-$day_key; $i++) {
+                $newhour=array_shift(array_map("basename",glob("$up_to_year/$yearmon/".$allday[$day_key+$i]."/??")));
+                if (!is_null($newhour)) { break; }
+            }
         }
         $nextdate=$yearmon.$allday[$day_key+$i].$newhour;
-    } elseif (!$comb_ym && array_key_exists($month_key-1,$allmonth)) {
-        for ($i = 1; $i < count($allmonth)-$month_key; $i++) {
-            $newhour=array_shift(array_map("basename",glob("$up_to_year/$year/".$allmonth[$month_key+$i]."/??/??")));
-            if (!is_null($newhour)) { break; }
+    } elseif (!$comb_ym && array_key_exists($month_key+1,$allmonth)) {
+        $i=1;
+        if (!is_null($oldhour)) {
+            for ($i = 1; $i < count($allmonth)-$month_key; $i++) {
+                $newhour=array_shift(array_map("basename",glob("$up_to_year/$year/".$allmonth[$month_key+$i]."/??/??")));
+                if (!is_null($newhour)) { break; }
+            }
+            $newday=array_shift(array_map("basename",glob("$up_to_year/$year/".$allmonth[$month_key+$i]."/??")));
+        } elseif (!is_null($oldday)) {
+            for ($i = 1; $i < count($allmonth)-$month_key; $i++) {
+                $newday=array_shift(array_map("basename",glob("$up_to_year/$year/".$allmonth[$month_key+$i]."/??")));
+                if (!is_null($newday)) { break; }
+            }
         }
-        $newday=array_shift(array_map("basename",glob("$up_to_year/$year/".$allmonth[$month_key+$i]."/??")));
         $nextdate=$year.$allmonth[$month_key+$i].$newday.$newhour;
     } elseif (!$comb_ym && array_key_exists($year_key+1,$allyear)) {
-        for ($i = 1; $i < count($allyear)-$year_key; $i++) {
-            $newhour=array_shift(array_map("basename",glob("$up_to_year/".$allyear[$year_key+$i]."/??/??/??")));
-            if (!is_null($newhour)) { break; }
+        if (!is_null($oldhour)) {
+            for ($i = 1; $i < count($allyear)-$year_key; $i++) {
+                $newhour=array_shift(array_map("basename",glob("$up_to_year/".$allyear[$year_key+$i]."/??/??/??")));
+                if (!is_null($newhour)) { break; }
+            }
+            $newday=array_shift(array_map("basename",glob("$up_to_year/".$allyear[$year_key+$i]."/??/??")));
+            $newmon=array_shift(array_map("basename",glob("$up_to_year/".$allyear[$year_key+$i]."/??")));
+        } elseif (!is_null($oldday)) {
+            for ($i = 1; $i < count($allyear)-$year_key; $i++) {
+                $newday=array_shift(array_map("basename",glob("$up_to_year/".$allyear[$year_key+$i]."/??/??")));
+                if (!is_null($newday)) { break; }
+            }
+            $newmon=array_shift(array_map("basename",glob("$up_to_year/".$allyear[$year_key+$i]."/??")));
+        } else {
+            for ($i = 1; $i < count($allyear)-$year_key; $i++) {
+                $newmon=array_shift(array_map("basename",glob("$up_to_year/".$allyear[$year_key+$i]."/??")));
+                if (!is_null($newmon)) { break; }
+            }
         }
-        $newday=array_shift(array_map("basename",glob("$up_to_year/".$allyear[$year_key+$i]."/??/??")));
-        $newmon=array_shift(array_map("basename",glob("$up_to_year/".$allyear[$year_key+$i]."/??")));
         $nextdate=$allyear[$year_key+$i].$newmon.$newday.$newhour;
     } elseif ($comb_ym && array_key_exists($ym_key+1,$allym)) {
-        for ($i = 1; $i < count($allym)-$ym_key; $i++) {
-            $newhour=array_shift(array_map("basename",glob("$up_to_year/".$allym[$ym_key+$i]."/??/??")));
-            if (!is_null($newhour)) { break; }
+        $i=1;
+        if (!is_null($oldhour)) {
+            for ($i = 1; $i < count($allym)-$ym_key; $i++) {
+                $newhour=array_shift(array_map("basename",glob("$up_to_year/".$allym[$ym_key+$i]."/??/??")));
+                if (!is_null($newhour)) { break; }
+            }
+            $newday=array_shift(array_map("basename",glob("$up_to_year/".$allym[$ym_key+$i]."/??")));
+        } elseif (!is_null($oldday)) {
+            for ($i = 1; $i < count($allym)-$ym_key; $i++) {
+                $newday=array_shift(array_map("basename",glob("$up_to_year/".$allym[$ym_key+$i]."/??")));
+                if (!is_null($newday)) { break; }
+            }
         }
-        $newday=array_shift(array_map("basename",glob("$up_to_year/".$allym[$ym_key+$i]."/??")));
         $nextdate=$allym[$ym_key+$i].$newday.$newhour;
     } else {
         $nextdate=NULL;
@@ -397,17 +476,24 @@ if (isset($allym)) {
     echo '<p style="float:left"><span class="bold">Analysis time:</span> &nbsp;';
 }
 $this_url_args=$url_args;
-if (isset($allhour)) {
+
+if (!is_null($nextdate) || !is_null($prevdate)) {
     if (!is_null($prevdate)) {
         $this_url_args['date']="date=$prevdate";
         echo "<a href='".$_SERVER['PHP_SELF']."?".implode('&',$this_url_args)."'>&lsaquo; Previous</a> ";
+    } else {
+        echo "&lsaquo; Previous ";
     }
     if (!is_null($nextdate)) {
         $this_url_args['date']="date=$nextdate";
         echo "<a href='".$_SERVER['PHP_SELF']."?".implode('&',$this_url_args)."'>Next &rsaquo;</a> ";
+    } else {
+        echo "Next &rsaquo; ";
     }
     echo "&nbsp;  &nbsp;";
+}
 
+if (isset($allhour)) {
     #    $this_time=new DateTime("$yr-$mh-$dy $hr:$mn:00",new DateTimeZone("UTC"));
     #    $this_time->format("Y-m-d H:i T");
 
@@ -465,7 +551,7 @@ if (isset($allym)) {
 if (isset($allym) || isset($allyear)) {
     echo "&nbsp;  &nbsp;";
     unset($this_url_args['date']);
-    echo "<a id='latest' href='".$_SERVER['PHP_SELF']."?".implode('&',$this_url_args)."'>Latest Forecast</a>";
+    echo "<a id='latest' href='".$_SERVER['PHP_SELF']."?".implode('&',$this_url_args)."'>Latest</a>";
     echo "</p>\n";
 }
 
