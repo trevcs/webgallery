@@ -47,6 +47,9 @@ $menus=array(
 );
 $menu_title=array('type'=>'Product','model'=>'Model','tz'=>'Timezone','region'=>'Region','acc'=>'Accumulation period','corr'=>'Corrections');
 
+$filename_replace=array('/^met[^_]*_/'=>'','/[-_]/'=>' ');
+$filename_uc=false;
+
 $date_format="H:i D, M d, Y T";
 
 require 'settings.inc';
@@ -634,10 +637,13 @@ echo "<span class='bold'>Images:</span>";
 if (!in_array($chosen['type'],$site_types)) { 
     $this_url_args=$url_args;
     $this_url_args['autostart']="autostart";
+    echo "<span class='bold' style='color:white'>Images:</span>&nbsp;&nbsp;Loop Speed: &nbsp;";
     $this_url_args['delay']="delay=".floor($delay/2);
-    echo "&nbsp; &nbsp; &nbsp; &nbsp; <a href='".$_SERVER['PHP_SELF']."?".implode('&',$this_url_args)."' class='speed' id='speed'>Faster</a> &nbsp; &nbsp; ";
+    echo "<a href='".$_SERVER['PHP_SELF']."?".implode('&',$this_url_args)."' class='speed' id='speed'>Faster</a> &nbsp;";
     $this_url_args['delay']="delay=".floor($delay*2);
     echo "<a href='".$_SERVER['PHP_SELF']."?".implode('&',$this_url_args)."' class='speed' id='speed'>Slower</a>";
+    echo '<p>';
+    echo '</p>';
 } 
 ?>
         <div id="thumbs" class="navigation">
@@ -646,73 +652,55 @@ if (!in_array($chosen['type'],$site_types)) {
 
 $no_images=true;
 # Now create the "thumbnails" which in our case are just text links to the images.
-if (!is_null($chosen['type']) && in_array($chosen['type'],$site_types)) {
-    # a list of all the images
-    foreach ($allimage as $filename) {
-        # for meteograms we parse the site string from the filename
-        $blah=preg_match('/_([a-zA-Z0-9-_]*)\.[a-zA-Z0-9]+$/',$filename,$matches);
-        if (count($matches)==0) {
-            $blah=preg_match('/([a-zA-Z0-9-_]*)\.[a-zA-Z0-9]+$/',$filename,$matches);
+# a list of all the images
+foreach ($allimage as $filename) {
+    $blah=preg_match('/_[\d]{12}_([\d]{12})[^\/]*$/',$filename,$matches);
+    if (count($matches)>0) {
+        $mn=substr($matches[1],10,2);
+    } else {
+        $blah=preg_match('/_[\d]{10}_([\d]{10})[^\/]*$/',$filename,$matches);
+        if (count($matches)>0) {
+            $mn='00';
+        } else {
+            $blah=preg_match('/([\d]{12})[^\/]*$/',$filename,$matches);
+            if (count($matches)>0) {
+                $mn=substr($matches[1],10,2);
+            } else {
+                $blah=preg_match('/([\d]{10})[^\/]*$/',$filename,$matches);
+                $mn='00';
+            }
         }
-        $place=str_replace('_',' ',$matches[1]);
-        $place=str_replace('-',' ',$place);
+    }
+    if ($blah) {
+        # the filename contains date/time info
+        $yr=substr($matches[1],0,4);
+        $mh=substr($matches[1],4,2);
+        $dy=substr($matches[1],6,2);
+        $hr=substr($matches[1],8,2);
+        $valid_time=new DateTime("$yr-$mh-$dy $hr:$mn:00",new DateTimeZone("UTC"));
+
+        # we also want to know the forecast lead time
+        if (isset($allhour)) {
+            $lead_time=($valid_time->format('U') - $ref_time->format('U'))/60/60;
+        }
+
+        $valid_time->setTimezone(new DateTimeZone($tzone));
+
+        if (isset($allhour)) {
+            echo '<li><a class="thumb" name="'.$lead_time.'" href="'.$filename.'" title="Valid at: '.$valid_time->format("Y-m-d H:i T").'">'.$valid_time->format($date_format).' (+'.floor($lead_time).'h'.sprintf('%02d',60*fmod($lead_time,1)).'m)'."</a></li>\n";
+        } else {
+            $vt=$valid_time->format("YmdHi");
+            echo '<li><a class="thumb" name="'.$vt.'" href="'.$filename.'" title="Valid at: '.$valid_time->format("Y-m-d H:i T").'">'.$valid_time->format($date_format)."</a></li>\n";
+        }
+        $no_images=false;
+    } else {
+        # Use the filename as the title
+        $blah=preg_match('/([a-zA-Z0-9-_]*)\.[a-zA-Z0-9]+$/',$filename,$matches);
+        # make the name look prettier ($filename_replace contains reg exp from settings.inc)
+        $place=preg_replace(array_keys($filename_replace),array_values($filename_replace),$matches[1]);
+        if ($filename_uc) { $place=ucwords($place); }
         echo '<li><a class="thumb" name="'.$matches[1].'" href="'.$filename.'" title="'.$place.'">'.$place."</a></li>\n";
         $no_images=false;
-    }
-} else {
-    # a list of all the images
-    foreach ($allimage as $filename) {
-        # for images we parse the valid date stamp from the filename
-#        if (!is_null($chosen['model']) && $chosen['model']=='NZLAM') {
-#            $blah=preg_match('/_[\d]{10}_([\d]{10})[^\/]*$/',$filename,$matches);
-#            $mn='00';
-#        } else {
-#            $blah=preg_match('/_([\d]{12})[^\/]*$/',$filename,$matches);
-#            $mn=substr($matches[1],10,2);
-#        }
-        $blah=preg_match('/_[\d]{12}_([\d]{12})[^\/]*$/',$filename,$matches);
-        if (count($matches)>0) {
-            $mn=substr($matches[1],10,2);
-        } else {
-            $blah=preg_match('/_[\d]{10}_([\d]{10})[^\/]*$/',$filename,$matches);
-            if (count($matches)>0) {
-                $mn='00';
-            } else {
-                $blah=preg_match('/([\d]{12})[^\/]*$/',$filename,$matches);
-                if (count($matches)>0) {
-                    $mn=substr($matches[1],10,2);
-                } else {
-                    $blah=preg_match('/([\d]{10})[^\/]*$/',$filename,$matches);
-                    $mn='00';
-                }
-            }
-        }
-        if ($blah) {
-            $yr=substr($matches[1],0,4);
-            $mh=substr($matches[1],4,2);
-            $dy=substr($matches[1],6,2);
-            $hr=substr($matches[1],8,2);
-            $valid_time=new DateTime("$yr-$mh-$dy $hr:$mn:00",new DateTimeZone("UTC"));
-
-            # we also want to know the forecast lead time
-            if (isset($allhour)) {
-                $lead_time=($valid_time->format('U') - $ref_time->format('U'))/60/60;
-            }
-
-            $valid_time->setTimezone(new DateTimeZone($tzone));
-
-            if (isset($allhour)) {
-                echo '<li><a class="thumb" name="'.$lead_time.'" href="'.$filename.'" title="Valid at: '.$valid_time->format("Y-m-d H:i T").'">'.$valid_time->format($date_format).' (+'.floor($lead_time).'h'.sprintf('%02d',60*fmod($lead_time,1)).'m)'."</a></li>\n";
-            } else {
-                $vt=$valid_time->format("YmdHi");
-                echo '<li><a class="thumb" name="'.$vt.'" href="'.$filename.'" title="Valid at: '.$valid_time->format("Y-m-d H:i T").'">'.$valid_time->format($date_format)."</a></li>\n";
-            }
-            $no_images=false;
-        } else {
-            $blah=preg_match('/([^\/]*)\.[a-zA-Z0-9]+$/',$filename,$matches);
-            echo '<li><a class="thumb" name="'.$matches[1].'" href="'.$filename.'" title="'.$matches[1].'">'.$matches[1]."</a></li>\n";
-            $no_images=false;
-        }
     }
 }
 if ($no_images) {
