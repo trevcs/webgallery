@@ -695,7 +695,7 @@ foreach ($allimage as $filename) {
         $no_images=false;
     } else {
         # Use the filename as the title
-        $blah=preg_match('/([a-zA-Z0-9-_]*)\.[a-zA-Z0-9]+$/',$filename,$matches);
+        $blah=preg_match('/([a-zA-Z0-9-_.]*)\.[a-zA-Z0-9]+$/',$filename,$matches);
         # make the name look prettier ($filename_replace contains reg exp from settings.inc)
         $place=preg_replace(array_keys($filename_replace),array_values($filename_replace),$matches[1]);
         if ($filename_uc) { $place=ucwords($place); }
