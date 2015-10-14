@@ -10,8 +10,12 @@ $nav_width='400px';
 
 $allow_unknown=true;
 
-$hour_dir=true;
+# Set to false if there *aren't* '/yyyymm/' or '/yyyy/mm/' subfolders
+$date_dir=true;
+# Set to false if there *aren't* '/yyyymm/dd/' subfolders
 $day_dir=true;
+# Set to false if there *aren't* '/yyyymm/dd/hh/' subfolders
+$hour_dir=true;
 
 $tz_types=array("aereal","cloud","wind","rain");
 $site_types=array("meteo","rose","tswind");
@@ -141,7 +145,7 @@ for ($i = 1; $i <= 10; $i++) {
     $alldir=array_map("basename",$alldir);
 
     # first check for date structure
-    if (!isset($allym) && (!isset($allyear) || !isset($allmonth))) {
+    if ($date_dir && !isset($allym) && (!isset($allyear) || !isset($allmonth))) {
         $allym=preg_grep('/^\d{6}$/',$alldir);
         if (count($allym)==0) {
             $allym = null;
@@ -182,7 +186,7 @@ for ($i = 1; $i <= 10; $i++) {
                 continue;
             }
         }
-    } elseif ($day_dir && !isset($allday)) {
+    } elseif ($date_dir && $day_dir && !isset($allday)) {
         $allday=preg_grep('/^\d{2}$/',$alldir);
         if (count($allday)==0) {
             $allday = null;
@@ -194,7 +198,7 @@ for ($i = 1; $i <= 10; $i++) {
             $image_path.=$day."/";
             continue;
         }
-    } elseif ($hour_dir && !isset($allhour)) {
+    } elseif ($date_dir && $hour_dir && !isset($allhour)) {
         $allhour=preg_grep('/^\d{2}$/',$alldir);
         if (count($allhour)==0) {
             $allhour = null;
@@ -209,22 +213,46 @@ for ($i = 1; $i <= 10; $i++) {
     }
 
     # then for set menus
+    $best_menu='';
+    $missing_matches=count($alldir);
     foreach(array_keys($menus) as $m) {
         $temp=array_intersect(array_keys($menus[$m]),$alldir);
-        if (count($temp)==count($alldir) && count($temp) > 0) {
-            $menu_contents[$m]=array_values($temp);
-
-            if (isset($_REQUEST[$m]) && in_array($_REQUEST[$m],$menu_contents[$m])) {
-                $chosen[$m]=$_REQUEST[$m];
-                $url_args[$m]=$m."=".$chosen[$m];
-            } else {
-                $chosen[$m]=$menu_contents[$m][0];
-            }
-            $found_something=true;
-            $image_path.=$chosen[$m]."/";
+        if ((count($alldir) - count($temp)) < $missing_matches) {
+            $missing_matches = count($alldir) - count($temp);
+            $best_menu=$m;
+        }
+        if ($missing_matches == 0) {
             break;
         }
     }
+    if ($best_menu != '') {
+        $temp=array_intersect(array_keys($menus[$best_menu]),$alldir);
+        $menu_contents[$best_menu]=array_unique(array_merge(array_values($temp),$alldir));
+
+        if (isset($_REQUEST[$best_menu]) && in_array($_REQUEST[$best_menu],$menu_contents[$best_menu])) {
+            $chosen[$best_menu]=$_REQUEST[$best_menu];
+            $url_args[$best_menu]=$best_menu."=".$chosen[$best_menu];
+        } else {
+            $chosen[$best_menu]=$menu_contents[$best_menu][0];
+        }
+        $found_something=true;
+        $image_path.=$chosen[$best_menu]."/";
+    }
+#    foreach(array_keys($menus) as $m) {
+#        if (count($temp)==count($alldir) && count($temp) > 0) {
+#            $menu_contents[$m]=array_values($temp);
+#
+#            if (isset($_REQUEST[$m]) && in_array($_REQUEST[$m],$menu_contents[$m])) {
+#                $chosen[$m]=$_REQUEST[$m];
+#                $url_args[$m]=$m."=".$chosen[$m];
+#            } else {
+#                $chosen[$m]=$menu_contents[$m][0];
+#            }
+#            $found_something=true;
+#            $image_path.=$chosen[$m]."/";
+#            break;
+#        }
+#    }
 
     # then for leftovers
     if (!$found_something) {

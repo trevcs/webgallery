@@ -22,9 +22,13 @@ $nav_width='250px';
 # name of folder to use for 'main menu' (coloured/boxed links)
 $topmenu='type';
 
+# Set to false if you don't want do handle date directories "specially"
+# (overrides $day_dir and $hour_dir if set to false)
+$date_dir=true;
+# Set to false if there *aren't* '/yyyymm/dd/' subfolders
+$day_dir=true;
 # Set to false if there *aren't* '/yyyymm/dd/hh/' subfolders
-#$day_dir=true;
-#$hour_dir=true;
+$hour_dir=true;
 
 # format for valid time in image list  (try "Y-m-d H:i T")
 #$date_format="H:i D, M d, Y T"
@@ -35,7 +39,21 @@ $topmenu='type';
 # names of 'type's that should have a virtual tz option (just changes the tz of the image link)
 #$tz_types=array("aereal","cloud","wind","rain");
 # names of 'type's that are site based (changes the way image links are generated)
-$site_types=array("meteo","rose","tswind","movie");
+$site_types=array("meteo","rose","tswind","movie","rolling","archive","trends");
+
+$filename_replace=array(
+    '/^met[^_]*_/'=>'',
+    '/-/'=>' & ','/_/'=>' ',
+    '/(sfc|total) /'=>'',
+    '/(^| )me($| )/'=>'$1bias$2',
+    '/(^| )rmse($| )/'=>'$1RMSE$2',
+    '/(^| )rh($| )/'=>'$1RH$2',
+    '/(^| )mslp($| )/'=>'$1MSLP$2',
+    '/(^| )ets($| )/'=>'$1ETS$2',
+    '/(^| )roc($| )/'=>'$1ROC$2',
+    '/(^| )pc($| )/'=>'$1PC$2',
+    '/(^| )etsbias($| )/'=>'$1ETS/Bias$2');
+$filename_uc=true;
 
 # all possible folder names and contents (with display names)
 $menus=array(
@@ -94,5 +112,15 @@ $menus=array(
 );
 
 # Display names for folders
-$menu_title=array('type'=>'Product','model'=>'Model','tz'=>'Timezone','region'=>'Region','acc'=>'Accumulation period','corr'=>'Corrections','locations'=>'Locations','averaging'=>'Averaging period','period'=>'Verification grouping');
+$menu_title=array(
+    'type'=>'Product',
+    'model'=>'Model',
+    'tz'=>'Timezone',
+    'region'=>'Region',
+    'acc'=>'Accumulation period',
+    'corr'=>'Corrections',
+    'locations'=>'Locations',
+    'averaging'=>'Averaging period',
+    'period'=>'Verification grouping'
+);
 ?>
