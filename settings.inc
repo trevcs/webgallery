@@ -20,6 +20,7 @@ $image_width='850px';
 $nav_width='250px';
 
 # name of folder to use for 'main menu' (coloured/boxed links)
+# set to false or '' for no blue menu boxes
 $topmenu='type';
 
 # Set to false if you don't want do handle date directories "specially"

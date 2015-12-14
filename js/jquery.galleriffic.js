@@ -336,6 +336,8 @@ function log(msg) {
                                 var image;
                                 if (imageData.slideUrl.substring(strlen-4) == 'webm') {
                                     image = document.createElement("VIDEO");
+                                } else if (imageData.slideUrl.substring(strlen-4) == 'html') {
+                                    image = document.createElement("IFRAME");
                                 } else {
                                     image = new Image();
                                 }
@@ -621,6 +623,15 @@ function log(msg) {
 					image.src = imageData.slideUrl;
                                         imageData.image = image;
                                         gallery.buildImage(imageData,isSync);
+                                    } else if (imageData.slideUrl.substring(strlen-4) == 'html') {
+                                        image = document.createElement("IFRAME");
+					image.alt = imageData.title;
+					image.controls = "controls";
+					image.src = imageData.slideUrl;
+					image.width = "100%";
+					image.height = "100%";
+                                        imageData.image = image;
+                                        gallery.buildImage(imageData,isSync);
                                     } else {
 					image = new Image();
 					
@@ -656,12 +667,15 @@ function log(msg) {
 
                                 var strlen = imageData.slideUrl.length;
                                 if (imageData.slideUrl.substring(strlen-4) == 'webm') {
-		  		var newSlide = this.$imageContainer
+		  		    var newSlide = this.$imageContainer
 					.append('<span class="image-wrapper current"><p title="'+imageData.title+'">&nbsp;</p></span>')
 					.find('span.current').css('opacity', '0');
-				
-				newSlide.find('p')
+				    newSlide.find('p')
 					.append(imageData.image)
+                                } else if (imageData.slideUrl.substring(strlen-4) == 'html') {
+		  		    var newSlide = this.$imageContainer
+					.append('<span class="image-wrapper current" style="width:100%;height:100%;"></span>')
+					.find('span.current').append(imageData.image);
                                 } else {
 				// Construct new hidden span for the image
 				var newSlide = this.$imageContainer

@@ -135,7 +135,7 @@ $comb_ym = true;
 # directory names or a list of pngs
 # (maximum of 10 nested directories)
 for ($i = 1; $i <= 10; $i++) {
-    $allimage=glob($image_path."*.{png,jpg,jpeg,webm}",GLOB_BRACE);
+    $allimage=glob($image_path."*.{png,jpg,jpeg,webm,html}",GLOB_BRACE);
 #    $allimage=preg_grep('/.png$/',$allfile);
     if (count($allimage)>0) {
         break;
@@ -639,7 +639,7 @@ foreach(array_keys($menu_title) as $m) {
         if ($chosen[$m]==$a) { echo " SELECTED"; }
         echo ">";
         if (in_array($a,array_keys($menus[$m]))) {
-            echo $menus[$m][$a]."</option>";
+            echo $menus[$m][$a];
         } else {
             echo $a;
         }
